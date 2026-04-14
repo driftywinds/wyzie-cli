@@ -30,6 +30,7 @@ type Subtitle struct {
 
 type SubtitleSearchParams struct {
 	TMDBID   int
+	IMDBID   string // preferred when available
 	Season   int
 	Episode  int
 	Language []string
@@ -40,7 +41,13 @@ type SubtitleSearchParams struct {
 
 func searchSubtitles(p SubtitleSearchParams) ([]Subtitle, error) {
 	params := url.Values{}
-	params.Set("id", strconv.Itoa(p.TMDBID))
+	// Prefer IMDB ID — more universally recognised by Wyzie's sources.
+	// Fall back to TMDB ID only when no IMDB ID is available.
+	if p.IMDBID != "" {
+		params.Set("id", p.IMDBID)
+	} else {
+		params.Set("id", strconv.Itoa(p.TMDBID))
+	}
 	params.Set("key", p.WyzieKey)
 
 	if p.Season > 0 && p.Episode > 0 {
@@ -114,7 +121,6 @@ func getSources(wyzieKey string) ([]string, error) {
 	defer resp.Body.Close()
 	body, _ := io.ReadAll(resp.Body)
 
-	// Response shape: { "opensubtitles": true, "subdl": false, ... }
 	var raw map[string]bool
 	if err := json.Unmarshal(body, &raw); err != nil {
 		return []string{"opensubtitles", "subdl", "podnapisi"}, nil

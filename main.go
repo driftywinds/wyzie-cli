@@ -45,7 +45,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	// Cap at 8 results and fetch their IMDB IDs in parallel
+	// Cap at 8 results and fetch their IMDB IDs
 	if len(results) > 8 {
 		results = results[:8]
 	}
@@ -80,6 +80,13 @@ func main() {
 		boldText(chosen.DisplayTitle()),
 		grayText(fmt.Sprintf("(%s)  TMDB:%d  IMDB:%s", chosen.Year(), chosen.ID, chosenIMDB)),
 	)
+
+	// Warn when no IMDB ID — Wyzie may not recognise this entry
+	if chosenIMDB == "" {
+		fmt.Println()
+		printWarn("This entry has no IMDB ID. It may be too new or incomplete — subtitles might not be found.")
+		fmt.Println(grayText("  Tip: try a different result that has an IMDB ID listed."))
+	}
 
 	// ── Step 3: Season / Episode for TV shows ────────────────────────
 	var season, episode int
@@ -127,6 +134,7 @@ func main() {
 
 	subs, err := searchSubtitles(SubtitleSearchParams{
 		TMDBID:   chosen.ID,
+		IMDBID:   chosenIMDB,
 		Season:   season,
 		Episode:  episode,
 		Language: langs,
